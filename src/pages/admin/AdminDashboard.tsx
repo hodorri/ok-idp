@@ -108,13 +108,13 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-accent" />
-              <span className="font-semibold text-sm">IDP 관리자</span>
+              <span className="font-semibold text-xs sm:text-sm">IDP 관리자</span>
             </div>
-            <nav className="flex items-center gap-1">
+            <nav className="hidden sm:flex items-center gap-1">
               {navItems.map(item => (
                 <button key={item.path} onClick={() => nav(item.path)}
                   className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
@@ -125,17 +125,27 @@ export default function AdminDashboard() {
             </nav>
           </div>
           <button onClick={handleLogout} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-            <LogOut className="w-3.5 h-3.5" /> 로그아웃
+            <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">로그아웃</span>
           </button>
+        </div>
+        {/* Mobile nav */}
+        <div className="sm:hidden flex items-center gap-1 px-4 pb-2 overflow-x-auto">
+          {navItems.map(item => (
+            <button key={item.path} onClick={() => nav(item.path)}
+              className={cn("flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap transition-colors",
+                item.active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/50")}>
+              <item.icon className="w-3 h-3" /> {item.label}
+            </button>
+          ))}
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="relative">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input placeholder="사번, 이름, 자격증명 검색" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              className="h-9 w-56 pl-8 text-xs bg-muted/30 border-border/60" />
+              className="h-9 w-full sm:w-56 pl-8 text-xs bg-muted/30 border-border/60" />
           </div>
           <Popover open={startOpen} onOpenChange={setStartOpen}>
             <PopoverTrigger asChild>
@@ -163,14 +173,14 @@ export default function AdminDashboard() {
           {(startDate || endDate) && (
             <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setStartDate(undefined); setEndDate(undefined); }}>초기화</Button>
           )}
-          <div className="ml-auto">
-            <Button size="sm" className="h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-sm" onClick={exportExcel}>
+          <div className="sm:ml-auto w-full sm:w-auto">
+            <Button size="sm" className="h-9 w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-sm" onClick={exportExcel}>
               <Download className="w-3.5 h-3.5 mr-1.5" /> 엑셀 다운로드
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {[
             { label: '총 신청', value: `${stats.count}건`, color: 'bg-primary/10 text-primary' },
             { label: '총 교육비', value: `${stats.eduTotal.toLocaleString()}원`, color: 'bg-blue-50 text-blue-600' },
@@ -179,14 +189,14 @@ export default function AdminDashboard() {
           ].map(s => (
             <Card key={s.label} className="shadow-sm border-border/50">
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
-                <p className="text-xl font-bold text-foreground">{s.value}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">{s.label}</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{s.value}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <Card className="shadow-sm border-border/50 overflow-hidden">
+        <Card className="shadow-sm border-border/50 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
