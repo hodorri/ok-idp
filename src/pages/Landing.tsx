@@ -14,7 +14,7 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
               <GraduationCap className="w-4.5 h-4.5 text-accent" />
             </div>
-            <span className="font-bold text-sm">OK금융그룹 IDP 자격증 비용 신청 사이트</span>
+            <span className="font-bold text-sm">OK금융그룹 IDP 신청 사이트</span>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/login">
