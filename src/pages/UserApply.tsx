@@ -242,7 +242,10 @@ export default function UserApply() {
             <div className="h-px bg-border/60" />
 
             <div className="space-y-3">
-              <Label className="text-xs font-medium text-muted-foreground">첨부 서류</Label>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground">첨부 서류</Label>
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">JPG, PNG, PDF 파일 / 최대 5MB</p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <span className="text-xs text-muted-foreground">자격증 사본</span>
