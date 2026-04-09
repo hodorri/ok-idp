@@ -39,24 +39,24 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
               <GraduationCap className="w-4.5 h-4.5 text-accent" />
             </div>
-            <span className="font-semibold text-sm">IDP 자격증 비용 지원</span>
+            <span className="font-semibold text-xs sm:text-sm">IDP 자격증 비용 지원</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{user?.name}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xs text-muted-foreground hidden sm:inline">{user?.name}</span>
             <button onClick={handleLogout} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              <LogOut className="w-3.5 h-3.5" /> 로그아웃
+              <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">로그아웃</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card className="shadow-sm border-border/50">
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
@@ -108,7 +108,7 @@ export default function UserDashboard() {
             </Link>
           </div>
 
-          <Card className="shadow-sm border-border/50 overflow-hidden">
+          <Card className="shadow-sm border-border/50 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
