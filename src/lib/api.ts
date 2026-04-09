@@ -57,6 +57,7 @@ export async function fetchApplications() {
     receiptImageUrl: String(r['영수증이미지'] || ''),
     appliedDate: String(r['신청일'] || ''),
     status: (String(r['상태'] || '대기중') as '대기중' | '승인' | '반려'),
+    rejectReason: String(r['반려사유'] || ''),
   }));
 }
 
@@ -73,8 +74,8 @@ export async function createApplication(app: {
   });
 }
 
-export async function updateApplicationStatus(id: string, status: string) {
-  return apiPost('updateApplicationStatus', { id, status });
+export async function updateApplicationStatus(id: string, status: string, rejectReason?: string) {
+  return apiPost('updateApplicationStatus', { id, status, rejectReason: rejectReason || '' });
 }
 
 // ── Cert List ──
