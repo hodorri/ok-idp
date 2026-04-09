@@ -33,9 +33,13 @@ export default function AdminDashboard() {
       const d = new Date(a.appliedDate);
       if (startDate && d < startDate) return false;
       if (endDate && d > endDate) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!a.employeeId.toLowerCase().includes(q) && !a.employeeName.toLowerCase().includes(q) && !a.certName.toLowerCase().includes(q)) return false;
+      }
       return true;
     });
-  }, [apps, startDate, endDate]);
+  }, [apps, startDate, endDate, searchQuery]);
 
   const stats = useMemo(() => ({
     count: filtered.length,
