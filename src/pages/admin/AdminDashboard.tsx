@@ -16,6 +16,7 @@ import * as XLSX from 'xlsx';
 export default function AdminDashboard() {
   const nav = useNavigate();
   const [apps, setApps] = useState<Application[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [startOpen, setStartOpen] = useState(false);
