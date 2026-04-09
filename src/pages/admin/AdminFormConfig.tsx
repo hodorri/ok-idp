@@ -1,24 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getFormConfig, saveFormConfig, type FormFieldConfig } from '@/lib/storage';
+import { type FormFieldConfig } from '@/lib/storage';
+import { fetchFormConfig, saveFormConfigRemote } from '@/lib/api';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2, Save, GraduationCap, LayoutDashboard, FileSpreadsheet, Settings, LogOut } from 'lucide-react';
+import { Plus, Trash2, Save, GraduationCap, LayoutDashboard, FileSpreadsheet, Settings, LogOut, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+function defaultFormConfig(): FormFieldConfig[] {
+  return [
+    { id: 'certName', label: '자격증명', type: 'dropdown', enabled: true, required: true, isCustom: false },
+    { id: 'acquiredDate', label: '취득일자', type: 'date', enabled: true, required: true, isCustom: false },
+    { id: 'educationCost', label: '교육비', type: 'number', enabled: true, required: true, isCustom: false },
+    { id: 'examFee', label: '응시료', type: 'number', enabled: true, required: true, isCustom: false },
+    { id: 'total', label: '합계', type: 'number', enabled: true, required: false, isCustom: false },
+    { id: 'note', label: '비고', type: 'textarea', enabled: true, required: false, isCustom: false },
+  ];
+}
 
 export default function AdminFormConfig() {
   const nav = useNavigate();
   const [fields, setFields] = useState<FormFieldConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!sessionStorage.getItem('idp_admin')) { nav('/admin/login'); return; }
-    setFields(getFormConfig());
+    fetchFormConfig()
+      .then(config => setFields(config && config.length > 0 ? config : defaultFormConfig()))
+      .catch(() => setFields(defaultFormConfig()))
+      .finally(() => setLoading(false));
   }, []);
 
   const updateField = (id: string, patch: Partial<FormFieldConfig>) => {
@@ -31,7 +47,17 @@ export default function AdminFormConfig() {
 
   const removeField = (id: string) => setFields(f => f.filter(ff => ff.id !== id));
 
-  const handleSave = () => { saveFormConfig(fields); toast.success('양식 설정이 저장되었습니다.'); };
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveFormConfigRemote(fields);
+      toast.success('양식 설정이 저장되었습니다.');
+    } catch {
+      toast.error('저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLogout = () => { sessionStorage.removeItem('idp_admin'); nav('/admin/login'); };
 
@@ -74,7 +100,9 @@ export default function AdminFormConfig() {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-9 text-xs" onClick={addField}><Plus className="w-3.5 h-3.5 mr-1" /> 필드 추가</Button>
-            <Button size="sm" className="h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-sm" onClick={handleSave}><Save className="w-3.5 h-3.5 mr-1" /> 저장</Button>
+            <Button size="sm" className="h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-sm" onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1" />} 저장
+            </Button>
           </div>
         </div>
 
@@ -91,7 +119,9 @@ export default function AdminFormConfig() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fields.map(f => (
+              {loading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-16"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+              ) : fields.map(f => (
                 <TableRow key={f.id} className="hover:bg-muted/20">
                   <TableCell><Switch checked={f.enabled} onCheckedChange={v => updateField(f.id, { enabled: v })} /></TableCell>
                   <TableCell><Input value={f.label} onChange={e => updateField(f.id, { label: e.target.value })} className="w-36 h-9 text-sm bg-muted/30 border-border/60" /></TableCell>

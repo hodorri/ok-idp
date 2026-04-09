@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { getApplications, saveApplications, type Application } from '@/lib/storage';
+import { type Application } from '@/lib/storage';
+import { fetchApplications, updateApplicationStatus } from '@/lib/api';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileSpreadsheet, Settings, LogOut, LayoutDashboard, GraduationCap, Search } from 'lucide-react';
+import { CalendarIcon, Download, FileSpreadsheet, Settings, LogOut, LayoutDashboard, GraduationCap, Search, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -17,6 +18,7 @@ import * as XLSX from 'xlsx';
 export default function AdminDashboard() {
   const nav = useNavigate();
   const [apps, setApps] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
@@ -25,7 +27,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!sessionStorage.getItem('idp_admin')) { nav('/admin/login'); return; }
-    setApps(getApplications());
+    fetchApplications()
+      .then(setApps)
+      .catch(() => toast.error('데이터 로딩 실패'))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -48,11 +53,14 @@ export default function AdminDashboard() {
     grandTotal: filtered.reduce((s, a) => s + a.total, 0),
   }), [filtered]);
 
-  const updateStatus = (id: string, status: Application['status']) => {
-    const updated = apps.map(a => a.id === id ? { ...a, status } : a);
-    setApps(updated);
-    saveApplications(updated);
-    toast.success('상태가 변경되었습니다.');
+  const handleUpdateStatus = async (id: string, status: Application['status']) => {
+    try {
+      await updateApplicationStatus(id, status);
+      setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      toast.success('상태가 변경되었습니다.');
+    } catch {
+      toast.error('상태 변경에 실패했습니다.');
+    }
   };
 
   const exportExcel = () => {
@@ -167,7 +175,9 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <TableRow><TableCell colSpan={9} className="text-center py-16"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-16 text-sm text-muted-foreground">신청 내역이 없습니다.</TableCell></TableRow>
               ) : filtered.map(a => (
                 <TableRow key={a.id} className="hover:bg-muted/20">
@@ -180,7 +190,7 @@ export default function AdminDashboard() {
                   <TableCell className="text-sm text-right font-semibold">{a.total.toLocaleString()}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.appliedDate}</TableCell>
                   <TableCell>
-                    <Select value={a.status} onValueChange={v => updateStatus(a.id, v as Application['status'])}>
+                    <Select value={a.status} onValueChange={v => handleUpdateStatus(a.id, v as Application['status'])}>
                       <SelectTrigger className="w-24 h-8 text-xs border-border/60"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="대기중">대기중</SelectItem>

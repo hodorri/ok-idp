@@ -1,28 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getCertList, saveCertList, type CertItem } from '@/lib/storage';
+import { type CertItem } from '@/lib/storage';
+import { fetchCertList, saveCertListRemote } from '@/lib/api';
 import { toast } from 'sonner';
-import { Plus, Trash2, Upload, GraduationCap, LayoutDashboard, FileSpreadsheet, Settings, LogOut } from 'lucide-react';
+import { Plus, Trash2, Upload, GraduationCap, LayoutDashboard, FileSpreadsheet, Settings, LogOut, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 
 export default function AdminCertList() {
   const nav = useNavigate();
   const [list, setList] = useState<CertItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
     if (!sessionStorage.getItem('idp_admin')) { nav('/admin/login'); return; }
-    setList(getCertList());
+    fetchCertList()
+      .then(setList)
+      .catch(() => toast.error('데이터 로딩 실패'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const save = (updated: CertItem[]) => { setList(updated); saveCertList(updated); };
+  const save = async (updated: CertItem[]) => {
+    setList(updated);
+    try { await saveCertListRemote(updated); } catch { toast.error('저장 실패'); }
+  };
 
   const addItem = () => {
     if (!newName) { toast.error('자격증명을 입력해주세요.'); return; }
@@ -122,7 +130,9 @@ export default function AdminCertList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {list.length === 0 ? (
+              {loading ? (
+                <TableRow><TableCell colSpan={3} className="text-center py-16"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+              ) : list.length === 0 ? (
                 <TableRow><TableCell colSpan={3} className="text-center py-16 text-sm text-muted-foreground">등록된 자격증이 없습니다.</TableCell></TableRow>
               ) : list.map(item => (
                 <TableRow key={item.id} className="hover:bg-muted/20">

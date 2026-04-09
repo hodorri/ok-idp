@@ -4,17 +4,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getCurrentUser, getApplications, setCurrentUser, type Application } from '@/lib/storage';
-import { Plus, LogOut, GraduationCap, Wallet, FileText } from 'lucide-react';
+import { getCurrentUser, setCurrentUser, type Application } from '@/lib/storage';
+import { fetchApplications } from '@/lib/api';
+import { Plus, LogOut, GraduationCap, Wallet, FileText, Loader2 } from 'lucide-react';
 
 export default function UserDashboard() {
   const nav = useNavigate();
   const [apps, setApps] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const user = getCurrentUser();
 
   useEffect(() => {
     if (!user) { nav('/'); return; }
-    setApps(getApplications().filter(a => a.employeeId === user.employeeId));
+    fetchApplications()
+      .then(all => setApps(all.filter(a => a.employeeId === user.employeeId)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const totalApproved = apps.filter(a => a.status === '승인').reduce((s, a) => s + a.total, 0);
@@ -33,7 +38,6 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -52,7 +56,6 @@ export default function UserDashboard() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="shadow-sm border-border/50">
             <CardContent className="p-5">
@@ -95,7 +98,6 @@ export default function UserDashboard() {
           </Card>
         </div>
 
-        {/* Table Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">신청 내역</h2>
@@ -120,7 +122,9 @@ export default function UserDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apps.length === 0 ? (
+                {loading ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-16"><Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+                ) : apps.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-16">
                       <div className="flex flex-col items-center gap-2">
@@ -128,9 +132,7 @@ export default function UserDashboard() {
                           <FileText className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <p className="text-sm text-muted-foreground">아직 신청 내역이 없습니다</p>
-                        <Link to="/apply">
-                          <Button variant="outline" size="sm" className="mt-1 text-xs">첫 신청하기</Button>
-                        </Link>
+                        <Link to="/apply"><Button variant="outline" size="sm" className="mt-1 text-xs">첫 신청하기</Button></Link>
                       </div>
                     </TableCell>
                   </TableRow>
