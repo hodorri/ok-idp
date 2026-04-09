@@ -63,7 +63,7 @@ export default function Landing() {
               </div>
               <h3 className="font-bold text-sm">간편한 신청</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                자격증명 선택, 비용 입력, 증빙서류 첨부까지 한 번에 신청할 수 있습니다.
+                자격증명 선택, 비용 입력, 증빙서류 첨부까지<br />한 번에 신청할 수 있습니다.
               </p>
             </CardContent>
           </Card>
@@ -74,7 +74,7 @@ export default function Landing() {
               </div>
               <h3 className="font-bold text-sm">실시간 진행 확인</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                신청 현황과 승인 상태를 실시간으로 확인하고 관리할 수 있습니다.
+                신청 현황과 승인 상태를<br />실시간으로 확인하고 관리할 수 있습니다.
               </p>
             </CardContent>
           </Card>
@@ -85,7 +85,7 @@ export default function Landing() {
               </div>
               <h3 className="font-bold text-sm">빠른 환급</h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                신청이 승인된 건에 대하여 IDP 지원비는 급여에 반영되어 지급해드립니다.
+                신청이 승인된 건에 대하여 IDP 지원비는<br />급여에 반영되어 지급해드립니다.
               </p>
             </CardContent>
           </Card>
