@@ -36,7 +36,8 @@ export default function Landing() {
               <span className="text-accent">회사가 지원합니다</span>
             </h1>
             <p className="text-muted-foreground leading-relaxed max-w-md">
-              개인개발계획(IDP) 자격증 취득에 소요되는 교육비와 응시료를 간편하게 신청하고, 빠르게 환급받으세요.
+              IDP 자격증 취득에 소요되는 교육비와 응시료를<br />
+              간편하게 신청해보세요.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <Link to="/login">
