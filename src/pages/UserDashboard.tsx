@@ -144,7 +144,12 @@ export default function UserDashboard() {
                     <TableCell className="text-sm text-right">{a.examFee.toLocaleString()}</TableCell>
                     <TableCell className="text-sm text-right font-semibold">{a.total.toLocaleString()}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{a.appliedDate}</TableCell>
-                    <TableCell>{statusBadge(a.status)}</TableCell>
+                    <TableCell>
+                      {statusBadge(a.status)}
+                      {a.status === '반려' && a.rejectReason && (
+                        <p className="text-xs text-destructive mt-1">{a.rejectReason}</p>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
