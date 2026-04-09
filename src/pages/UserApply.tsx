@@ -129,20 +129,20 @@ export default function UserApply() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="max-w-2xl mx-auto px-6 h-14 flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <button onClick={() => nav('/dashboard')} className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
             <GraduationCap className="w-4.5 h-4.5 text-accent" />
-            <span className="font-semibold text-sm">IDP 신규 신청</span>
+            <span className="font-semibold text-xs sm:text-sm">IDP 신규 신청</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Card className="shadow-sm border-border/50">
-          <CardContent className="p-6 space-y-5">
+          <CardContent className="p-4 sm:p-6 space-y-5">
             <div>
               <h2 className="text-lg font-semibold">자격증 취득 비용 환급 신청</h2>
               <p className="text-xs text-muted-foreground mt-1">필요한 정보를 입력하고 증빙 서류를 첨부해주세요.</p>
