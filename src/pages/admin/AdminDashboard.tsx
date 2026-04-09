@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { getApplications, saveApplications, type Application } from '@/lib/storage';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, FileSpreadsheet, Settings, LogOut, LayoutDashboard, GraduationCap } from 'lucide-react';
+import { CalendarIcon, Download, FileSpreadsheet, Settings, LogOut, LayoutDashboard, GraduationCap, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -16,6 +17,7 @@ import * as XLSX from 'xlsx';
 export default function AdminDashboard() {
   const nav = useNavigate();
   const [apps, setApps] = useState<Application[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [startOpen, setStartOpen] = useState(false);
@@ -31,9 +33,13 @@ export default function AdminDashboard() {
       const d = new Date(a.appliedDate);
       if (startDate && d < startDate) return false;
       if (endDate && d > endDate) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!a.employeeId.toLowerCase().includes(q) && !a.employeeName.toLowerCase().includes(q) && !a.certName.toLowerCase().includes(q)) return false;
+      }
       return true;
     });
-  }, [apps, startDate, endDate]);
+  }, [apps, startDate, endDate, searchQuery]);
 
   const stats = useMemo(() => ({
     count: filtered.length,
@@ -97,6 +103,11 @@ export default function AdminDashboard() {
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         <div className="flex flex-wrap gap-3 items-center">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder="사번, 이름, 자격증명 검색" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              className="h-9 w-56 pl-8 text-xs bg-muted/30 border-border/60" />
+          </div>
           <Popover open={startOpen} onOpenChange={setStartOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className={cn("h-9 text-xs bg-muted/30 border-border/60", !startDate && 'text-muted-foreground')}>
