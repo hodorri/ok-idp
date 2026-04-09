@@ -108,7 +108,47 @@ export default function UserDashboard() {
             </Link>
           </div>
 
-          <Card className="shadow-sm border-border/50 overflow-x-auto">
+          {/* Mobile card view */}
+          <div className="sm:hidden space-y-3">
+            {loading ? (
+              <div className="flex justify-center py-16"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+            ) : apps.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-16">
+                <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">아직 신청 내역이 없습니다</p>
+                <Link to="/apply"><Button variant="outline" size="sm" className="mt-1 text-xs">첫 신청하기</Button></Link>
+              </div>
+            ) : apps.map(a => (
+              <Card key={a.id} className="shadow-sm border-border/50">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">{a.certName}</span>
+                    {statusBadge(a.status)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-y-1.5 text-xs">
+                    <span className="text-muted-foreground">취득일자</span>
+                    <span className="text-right">{a.acquiredDate}</span>
+                    <span className="text-muted-foreground">교육비</span>
+                    <span className="text-right">{a.educationCost.toLocaleString()}원</span>
+                    <span className="text-muted-foreground">응시료</span>
+                    <span className="text-right">{a.examFee.toLocaleString()}원</span>
+                    <span className="text-muted-foreground font-medium">합계</span>
+                    <span className="text-right font-bold">{a.total.toLocaleString()}원</span>
+                    <span className="text-muted-foreground">신청일</span>
+                    <span className="text-right">{a.appliedDate}</span>
+                  </div>
+                  {a.status === '반려' && a.rejectReason && (
+                    <p className="text-xs text-destructive bg-destructive/5 rounded-md px-2 py-1.5">반려사유: {a.rejectReason}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <Card className="shadow-sm border-border/50 overflow-hidden hidden sm:block">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
