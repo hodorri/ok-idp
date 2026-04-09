@@ -81,12 +81,13 @@ export default function UserApply() {
       let certImageUrl = '';
       let receiptImageUrl = '';
 
+      const filePrefix = `${user!.employeeId}_${user!.name}_${certName}`;
       if (certImage) {
-        const res = await uploadImage(certImage, `cert_${Date.now()}.png`, '자격증이미지');
+        const res = await uploadImage(certImage, `${filePrefix}_자격증빙.png`, '자격증이미지');
         certImageUrl = res.fileUrl || '';
       }
       if (receiptImage) {
-        const res = await uploadImage(receiptImage, `receipt_${Date.now()}.png`, '영수증이미지');
+        const res = await uploadImage(receiptImage, `${filePrefix}_매출전표.png`, '영수증이미지');
         receiptImageUrl = res.fileUrl || '';
       }
 
