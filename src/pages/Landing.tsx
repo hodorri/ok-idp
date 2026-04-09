@@ -47,7 +47,7 @@ export default function Landing() {
               </Link>
             </div>
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 animate-float">
             <img src={certiMan} alt="자격증 취득 캐릭터" className="w-64 md:w-80 drop-shadow-lg" />
           </div>
         </div>
