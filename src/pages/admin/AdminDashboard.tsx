@@ -103,6 +103,11 @@ export default function AdminDashboard() {
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         <div className="flex flex-wrap gap-3 items-center">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder="사번, 이름, 자격증명 검색" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              className="h-9 w-56 pl-8 text-xs bg-muted/30 border-border/60" />
+          </div>
           <Popover open={startOpen} onOpenChange={setStartOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className={cn("h-9 text-xs bg-muted/30 border-border/60", !startDate && 'text-muted-foreground')}>
