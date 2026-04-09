@@ -75,7 +75,7 @@ export async function createApplication(app: {
 }
 
 export async function updateApplicationStatus(id: string, status: string, rejectReason?: string) {
-  return apiPost('updateApplicationStatus', { id, status, rejectReason: rejectReason || '' });
+  return apiPost('updateApplicationStatus', { id, status, '반려사유': rejectReason || '' });
 }
 
 // ── Cert List ──
