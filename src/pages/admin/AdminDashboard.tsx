@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { type Application } from '@/lib/storage';
 import { fetchApplications, updateApplicationStatus } from '@/lib/api';
@@ -24,6 +26,9 @@ export default function AdminDashboard() {
   const [endDate, setEndDate] = useState<Date>();
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectTargetId, setRejectTargetId] = useState('');
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     if (!sessionStorage.getItem('idp_admin')) { nav('/admin/login'); return; }
@@ -53,14 +58,30 @@ export default function AdminDashboard() {
     grandTotal: filtered.reduce((s, a) => s + a.total, 0),
   }), [filtered]);
 
-  const handleUpdateStatus = async (id: string, status: Application['status']) => {
+  const handleStatusChange = (id: string, status: Application['status']) => {
+    if (status === '반려') {
+      setRejectTargetId(id);
+      setRejectReason('');
+      setRejectDialogOpen(true);
+      return;
+    }
+    doUpdateStatus(id, status);
+  };
+
+  const doUpdateStatus = async (id: string, status: Application['status'], reason?: string) => {
     try {
-      await updateApplicationStatus(id, status);
-      setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      await updateApplicationStatus(id, status, reason);
+      setApps(prev => prev.map(a => a.id === id ? { ...a, status, rejectReason: reason || '' } : a));
       toast.success('상태가 변경되었습니다.');
     } catch {
       toast.error('상태 변경에 실패했습니다.');
     }
+  };
+
+  const handleRejectConfirm = () => {
+    if (!rejectReason.trim()) { toast.error('반려 사유를 입력해주세요.'); return; }
+    doUpdateStatus(rejectTargetId, '반려', rejectReason);
+    setRejectDialogOpen(false);
   };
 
   const exportExcel = () => {
@@ -190,7 +211,7 @@ export default function AdminDashboard() {
                   <TableCell className="text-sm text-right font-semibold">{a.total.toLocaleString()}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.appliedDate}</TableCell>
                   <TableCell>
-                    <Select value={a.status} onValueChange={v => handleUpdateStatus(a.id, v as Application['status'])}>
+                    <Select value={a.status} onValueChange={v => handleStatusChange(a.id, v as Application['status'])}>
                       <SelectTrigger className="w-24 h-8 text-xs border-border/60"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="대기중">대기중</SelectItem>
@@ -198,6 +219,9 @@ export default function AdminDashboard() {
                         <SelectItem value="반려">반려</SelectItem>
                       </SelectContent>
                     </Select>
+                    {a.status === '반려' && a.rejectReason && (
+                      <p className="text-xs text-destructive mt-1 truncate max-w-[160px]" title={a.rejectReason}>사유: {a.rejectReason}</p>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -205,6 +229,19 @@ export default function AdminDashboard() {
           </Table>
         </Card>
       </main>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">반려 사유 입력</DialogTitle>
+          </DialogHeader>
+          <Textarea placeholder="반려 사유를 입력해주세요..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} className="min-h-[100px]" />
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRejectDialogOpen(false)}>취소</Button>
+            <Button variant="destructive" size="sm" onClick={handleRejectConfirm}>반려 확인</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
