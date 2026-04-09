@@ -18,6 +18,7 @@ export interface Application {
   receiptImageUrl?: string;
   appliedDate: string;
   status: '대기중' | '승인' | '반려';
+  rejectReason?: string;
   customFields?: Record<string, string>;
 }
 
