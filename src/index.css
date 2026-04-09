@@ -2,46 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
 @layer base {
   :root {
-    --background: 40 20% 97%;
-    --foreground: 224 54% 23%;
+    --background: 30 25% 98%;
+    --foreground: 220 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 54% 23%;
+    --card-foreground: 220 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 54% 23%;
+    --popover-foreground: 220 20% 20%;
 
-    --primary: 224 54% 23%;
+    --primary: 224 50% 24%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 94%;
-    --secondary-foreground: 224 54% 23%;
+    --secondary: 30 15% 95%;
+    --secondary-foreground: 220 20% 20%;
 
-    --muted: 220 20% 94%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 30 10% 94%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 16 85% 60%;
+    --accent: 16 80% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 89%;
-    --input: 220 13% 89%;
-    --ring: 224 54% 23%;
+    --border: 30 10% 90%;
+    --input: 30 10% 90%;
+    --ring: 224 50% 24%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 224 54% 23%;
+    --sidebar-background: 224 50% 24%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 16 85% 60%;
+    --sidebar-primary: 16 80% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 54% 30%;
+    --sidebar-accent: 224 50% 30%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 224 40% 30%;
-    --sidebar-ring: 16 85% 60%;
+    --sidebar-ring: 16 80% 58%;
   }
 }
 
@@ -50,7 +52,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 }

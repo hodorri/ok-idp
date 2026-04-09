@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { getCurrentUser, getApplications, saveApplications, getCertList, getFormConfig, type Application, type FormFieldConfig } from '@/lib/storage';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { CalendarIcon, Check, ChevronsUpDown, Upload, ArrowLeft, X } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown, Upload, ArrowLeft, X, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function UserApply() {
@@ -37,7 +37,6 @@ export default function UserApply() {
   useEffect(() => { if (!user) nav('/'); }, []);
 
   const enabledFields = formConfig.filter(f => f.enabled);
-
   const isFieldEnabled = (id: string) => enabledFields.some(f => f.id === id);
   const getFieldLabel = (id: string) => formConfig.find(f => f.id === id)?.label || id;
   const isRequired = (id: string) => formConfig.find(f => f.id === id)?.required ?? false;
@@ -71,8 +70,7 @@ export default function UserApply() {
       customFields,
     };
 
-    const apps = getApplications();
-    saveApplications([...apps, app]);
+    saveApplications([...getApplications(), app]);
     toast.success('신청이 완료되었습니다!');
     nav('/dashboard');
   };
@@ -81,25 +79,34 @@ export default function UserApply() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground px-6 py-4 flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80" onClick={() => nav('/dashboard')}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <h1 className="text-lg font-bold">IDP 신규 신청</h1>
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-2xl mx-auto px-6 h-14 flex items-center gap-3">
+          <button onClick={() => nav('/dashboard')} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4.5 h-4.5 text-accent" />
+            <span className="font-semibold text-sm">IDP 신규 신청</span>
+          </div>
+        </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-6">
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>자격증 취득 비용 환급 신청</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
+      <main className="max-w-2xl mx-auto px-6 py-8">
+        <Card className="shadow-sm border-border/50">
+          <CardContent className="p-6 space-y-5">
+            <div>
+              <h2 className="text-lg font-semibold">자격증 취득 비용 환급 신청</h2>
+              <p className="text-xs text-muted-foreground mt-1">필요한 정보를 입력하고 증빙 서류를 첨부해주세요.</p>
+            </div>
+
+            <div className="h-px bg-border/60" />
+
             {isFieldEnabled('certName') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('certName')} {isRequired('certName') && <span className="text-destructive">*</span>}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('certName')} {isRequired('certName') && <span className="text-destructive">*</span>}</Label>
                 <Popover open={certOpen} onOpenChange={setCertOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className={cn("w-full justify-between", !certName && "text-muted-foreground")}>
+                    <Button variant="outline" role="combobox" className={cn("w-full justify-between h-11 bg-muted/30 border-border/60", !certName && "text-muted-foreground")}>
                       {certName || '자격증을 선택하세요'}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -125,92 +132,94 @@ export default function UserApply() {
             )}
 
             {isFieldEnabled('acquiredDate') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('acquiredDate')} {isRequired('acquiredDate') && <span className="text-destructive">*</span>}</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('acquiredDate')} {isRequired('acquiredDate') && <span className="text-destructive">*</span>}</Label>
                 <Popover open={dateOpen} onOpenChange={setDateOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !acquiredDate && "text-muted-foreground")}>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-11 bg-muted/30 border-border/60", !acquiredDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {acquiredDate ? format(acquiredDate, 'PPP', { locale: ko }) : '날짜 선택'}
+                      {acquiredDate ? format(acquiredDate, 'PPP', { locale: ko }) : '날짜를 선택하세요'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={acquiredDate} onSelect={(d) => { setAcquiredDate(d); setDateOpen(false); }} initialFocus className="pointer-events-auto" />
+                    <Calendar mode="single" selected={acquiredDate} onSelect={d => { setAcquiredDate(d); setDateOpen(false); }} initialFocus className="pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>
             )}
 
-            {isFieldEnabled('educationCost') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('educationCost')} (원) {isRequired('educationCost') && <span className="text-destructive">*</span>}</Label>
-                <Input type="number" placeholder="0" value={educationCost} onChange={e => setEducationCost(e.target.value)} />
-              </div>
-            )}
-
-            {isFieldEnabled('examFee') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('examFee')} (원) {isRequired('examFee') && <span className="text-destructive">*</span>}</Label>
-                <Input type="number" placeholder="0" value={examFee} onChange={e => setExamFee(e.target.value)} />
-              </div>
-            )}
-
-            {isFieldEnabled('total') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('total')} (원)</Label>
-                <Input type="text" readOnly value={total.toLocaleString()} className="bg-muted" />
-              </div>
-            )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {isFieldEnabled('educationCost') && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('educationCost')} (원)</Label>
+                  <Input type="number" placeholder="0" value={educationCost} onChange={e => setEducationCost(e.target.value)} className="h-11 bg-muted/30 border-border/60" />
+                </div>
+              )}
+              {isFieldEnabled('examFee') && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('examFee')} (원)</Label>
+                  <Input type="number" placeholder="0" value={examFee} onChange={e => setExamFee(e.target.value)} className="h-11 bg-muted/30 border-border/60" />
+                </div>
+              )}
+              {isFieldEnabled('total') && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('total')} (원)</Label>
+                  <Input type="text" readOnly value={total.toLocaleString()} className="h-11 bg-muted/50 border-border/60 font-semibold" />
+                </div>
+              )}
+            </div>
 
             {isFieldEnabled('note') && (
-              <div className="space-y-2">
-                <Label>{getFieldLabel('note')}</Label>
-                <Textarea placeholder="비고 입력 (선택사항)" value={note} onChange={e => setNote(e.target.value)} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">{getFieldLabel('note')}</Label>
+                <Textarea placeholder="비고 입력 (선택사항)" value={note} onChange={e => setNote(e.target.value)} className="bg-muted/30 border-border/60 min-h-[80px]" />
               </div>
             )}
 
             {customFieldConfigs.map(f => (
-              <div key={f.id} className="space-y-2">
-                <Label>{f.label} {f.required && <span className="text-destructive">*</span>}</Label>
+              <div key={f.id} className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">{f.label} {f.required && <span className="text-destructive">*</span>}</Label>
                 {f.type === 'dropdown' && f.options ? (
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={customFields[f.id] || ''} onChange={e => setCustomFields(p => ({ ...p, [f.id]: e.target.value }))}>
+                  <select className="flex h-11 w-full rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-sm" value={customFields[f.id] || ''} onChange={e => setCustomFields(p => ({ ...p, [f.id]: e.target.value }))}>
                     <option value="">선택하세요</option>
                     {f.options.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 ) : (
-                  <Input value={customFields[f.id] || ''} onChange={e => setCustomFields(p => ({ ...p, [f.id]: e.target.value }))} />
+                  <Input value={customFields[f.id] || ''} onChange={e => setCustomFields(p => ({ ...p, [f.id]: e.target.value }))} className="h-11 bg-muted/30 border-border/60" />
                 )}
               </div>
             ))}
 
-            <div className="border-t pt-5 space-y-4">
-              <h3 className="font-semibold">첨부 서류</h3>
+            <div className="h-px bg-border/60" />
+
+            <div className="space-y-3">
+              <Label className="text-xs font-medium text-muted-foreground">첨부 서류</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>자격증 사본</Label>
+                <div className="space-y-1.5">
+                  <span className="text-xs text-muted-foreground">자격증 사본</span>
                   {certImage ? (
-                    <div className="relative">
-                      <img src={certImage} alt="cert" className="w-full h-32 object-cover rounded-lg border" />
-                      <button onClick={() => setCertImage('')} className="absolute top-1 right-1 bg-background rounded-full p-0.5 shadow"><X className="w-4 h-4" /></button>
+                    <div className="relative rounded-xl overflow-hidden border border-border/60">
+                      <img src={certImage} alt="cert" className="w-full h-32 object-cover" />
+                      <button onClick={() => setCertImage('')} className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-sm hover:bg-background"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border/60 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors">
+                      <Upload className="w-5 h-5 text-muted-foreground mb-1.5" />
                       <span className="text-xs text-muted-foreground">클릭하여 업로드</span>
                       <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setCertImage)} />
                     </label>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label>매출전표/영수증</Label>
+                <div className="space-y-1.5">
+                  <span className="text-xs text-muted-foreground">매출전표/영수증</span>
                   {receiptImage ? (
-                    <div className="relative">
-                      <img src={receiptImage} alt="receipt" className="w-full h-32 object-cover rounded-lg border" />
-                      <button onClick={() => setReceiptImage('')} className="absolute top-1 right-1 bg-background rounded-full p-0.5 shadow"><X className="w-4 h-4" /></button>
+                    <div className="relative rounded-xl overflow-hidden border border-border/60">
+                      <img src={receiptImage} alt="receipt" className="w-full h-32 object-cover" />
+                      <button onClick={() => setReceiptImage('')} className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-sm hover:bg-background"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                    <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-border/60 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors">
+                      <Upload className="w-5 h-5 text-muted-foreground mb-1.5" />
                       <span className="text-xs text-muted-foreground">클릭하여 업로드</span>
                       <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload(setReceiptImage)} />
                     </label>
@@ -219,7 +228,7 @@ export default function UserApply() {
               </div>
             </div>
 
-            <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90 mt-4" onClick={handleSubmit}>신청하기</Button>
+            <Button className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-medium shadow-sm" onClick={handleSubmit}>신청하기</Button>
           </CardContent>
         </Card>
       </main>

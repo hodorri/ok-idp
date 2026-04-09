@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { getApplications, saveApplications, type Application } from '@/lib/storage';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { CalendarIcon, Download, FileSpreadsheet, ClipboardList, Settings, LogOut } from 'lucide-react';
+import { CalendarIcon, Download, FileSpreadsheet, Settings, LogOut, LayoutDashboard, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -53,15 +51,9 @@ export default function AdminDashboard() {
 
   const exportExcel = () => {
     const data = filtered.map(a => ({
-      '사번': a.employeeId,
-      '이름': a.employeeName,
-      '자격증명': a.certName,
-      '취득일자': a.acquiredDate,
-      '교육비': a.educationCost,
-      '응시료': a.examFee,
-      '합계': a.total,
-      '신청일': a.appliedDate,
-      '처리상태': a.status,
+      '사번': a.employeeId, '이름': a.employeeName, '자격증명': a.certName,
+      '취득일자': a.acquiredDate, '교육비': a.educationCost, '응시료': a.examFee,
+      '합계': a.total, '신청일': a.appliedDate, '처리상태': a.status,
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -70,135 +62,126 @@ export default function AdminDashboard() {
     toast.success('엑셀 파일이 다운로드되었습니다.');
   };
 
-  const statusColor = (s: string) => {
-    if (s === '승인') return 'bg-green-100 text-green-800';
-    if (s === '반려') return 'bg-red-100 text-red-800';
-    return 'bg-yellow-100 text-yellow-800';
-  };
-
   const handleLogout = () => { sessionStorage.removeItem('idp_admin'); nav('/admin/login'); };
+
+  const navItems = [
+    { label: '대시보드', icon: LayoutDashboard, path: '/admin', active: true },
+    { label: '양식관리', icon: Settings, path: '/admin/form-config' },
+    { label: '자격증관리', icon: FileSpreadsheet, path: '/admin/cert-list' },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold">IDP 관리자</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80" onClick={() => nav('/admin')}>
-            <ClipboardList className="w-4 h-4 mr-1" /> 대시보드
-          </Button>
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80" onClick={() => nav('/admin/form-config')}>
-            <Settings className="w-4 h-4 mr-1" /> 양식관리
-          </Button>
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80" onClick={() => nav('/admin/cert-list')}>
-            <FileSpreadsheet className="w-4 h-4 mr-1" /> 자격증관리
-          </Button>
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-1" /> 로그아웃
-          </Button>
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-accent" />
+              <span className="font-semibold text-sm">IDP 관리자</span>
+            </div>
+            <nav className="flex items-center gap-1">
+              {navItems.map(item => (
+                <button key={item.path} onClick={() => nav(item.path)}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                    item.active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                  <item.icon className="w-3.5 h-3.5" /> {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+          <button onClick={handleLogout} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            <LogOut className="w-3.5 h-3.5" /> 로그아웃
+          </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        <h2 className="text-xl font-bold">신청 현황 대시보드</h2>
-
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground">시작일</span>
-            <Popover open={startOpen} onOpenChange={setStartOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn(!startDate && 'text-muted-foreground')}>
-                  <CalendarIcon className="w-4 h-4 mr-1" />
-                  {startDate ? format(startDate, 'yyyy-MM-dd') : '시작일'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={startDate} onSelect={d => { setStartDate(d); setStartOpen(false); }} className="pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <span className="text-muted-foreground pb-1">~</span>
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground">종료일</span>
-            <Popover open={endOpen} onOpenChange={setEndOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn(!endDate && 'text-muted-foreground')}>
-                  <CalendarIcon className="w-4 h-4 mr-1" />
-                  {endDate ? format(endDate, 'yyyy-MM-dd') : '종료일'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={endDate} onSelect={d => { setEndDate(d); setEndOpen(false); }} className="pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => { setStartDate(undefined); setEndDate(undefined); }}>초기화</Button>
+      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        <div className="flex flex-wrap gap-3 items-center">
+          <Popover open={startOpen} onOpenChange={setStartOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-9 text-xs bg-muted/30 border-border/60", !startDate && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                {startDate ? format(startDate, 'yyyy-MM-dd') : '시작일'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={startDate} onSelect={d => { setStartDate(d); setStartOpen(false); }} className="pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-muted-foreground">~</span>
+          <Popover open={endOpen} onOpenChange={setEndOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-9 text-xs bg-muted/30 border-border/60", !endDate && 'text-muted-foreground')}>
+                <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                {endDate ? format(endDate, 'yyyy-MM-dd') : '종료일'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={endDate} onSelect={d => { setEndDate(d); setEndOpen(false); }} className="pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          {(startDate || endDate) && (
+            <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setStartDate(undefined); setEndDate(undefined); }}>초기화</Button>
+          )}
           <div className="ml-auto">
-            <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={exportExcel}>
-              <Download className="w-4 h-4 mr-1" /> 엑셀 다운로드
+            <Button size="sm" className="h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-sm" onClick={exportExcel}>
+              <Download className="w-3.5 h-3.5 mr-1.5" /> 엑셀 다운로드
             </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: '총 신청 건수', value: `${stats.count}건` },
-            { label: '총 교육비', value: `${stats.eduTotal.toLocaleString()}원` },
-            { label: '총 응시료', value: `${stats.examTotal.toLocaleString()}원` },
-            { label: '총 지원금액', value: `${stats.grandTotal.toLocaleString()}원` },
+            { label: '총 신청', value: `${stats.count}건`, color: 'bg-primary/10 text-primary' },
+            { label: '총 교육비', value: `${stats.eduTotal.toLocaleString()}원`, color: 'bg-blue-50 text-blue-600' },
+            { label: '총 응시료', value: `${stats.examTotal.toLocaleString()}원`, color: 'bg-violet-50 text-violet-600' },
+            { label: '총 지원금액', value: `${stats.grandTotal.toLocaleString()}원`, color: 'bg-accent/10 text-accent' },
           ].map(s => (
-            <Card key={s.label} className="shadow-sm">
-              <CardHeader className="pb-1"><CardTitle className="text-sm text-muted-foreground font-medium">{s.label}</CardTitle></CardHeader>
-              <CardContent><p className="text-2xl font-bold text-primary">{s.value}</p></CardContent>
+            <Card key={s.label} className="shadow-sm border-border/50">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
+                <p className="text-xl font-bold text-foreground">{s.value}</p>
+              </CardContent>
             </Card>
           ))}
         </div>
 
-        <Card className="shadow-md">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>사번</TableHead>
-                  <TableHead>이름</TableHead>
-                  <TableHead>자격증명</TableHead>
-                  <TableHead>취득일자</TableHead>
-                  <TableHead className="text-right">교육비</TableHead>
-                  <TableHead className="text-right">응시료</TableHead>
-                  <TableHead className="text-right">합계</TableHead>
-                  <TableHead>신청일</TableHead>
-                  <TableHead>처리상태</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">신청 내역이 없습니다.</TableCell></TableRow>
-                ) : filtered.map(a => (
-                  <TableRow key={a.id}>
-                    <TableCell>{a.employeeId}</TableCell>
-                    <TableCell>{a.employeeName}</TableCell>
-                    <TableCell className="font-medium">{a.certName}</TableCell>
-                    <TableCell>{a.acquiredDate}</TableCell>
-                    <TableCell className="text-right">{a.educationCost.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{a.examFee.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-semibold">{a.total.toLocaleString()}</TableCell>
-                    <TableCell>{a.appliedDate}</TableCell>
-                    <TableCell>
-                      <Select value={a.status} onValueChange={v => updateStatus(a.id, v as Application['status'])}>
-                        <SelectTrigger className="w-24 h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="대기중">대기중</SelectItem>
-                          <SelectItem value="승인">승인</SelectItem>
-                          <SelectItem value="반려">반려</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
+        <Card className="shadow-sm border-border/50 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                {['사번','이름','자격증명','취득일자','교육비','응시료','합계','신청일','처리상태'].map(h => (
+                  <TableHead key={h} className={cn("text-xs font-semibold", ['교육비','응시료','합계'].includes(h) && 'text-right')}>{h}</TableHead>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={9} className="text-center py-16 text-sm text-muted-foreground">신청 내역이 없습니다.</TableCell></TableRow>
+              ) : filtered.map(a => (
+                <TableRow key={a.id} className="hover:bg-muted/20">
+                  <TableCell className="text-sm">{a.employeeId}</TableCell>
+                  <TableCell className="text-sm">{a.employeeName}</TableCell>
+                  <TableCell className="text-sm font-medium">{a.certName}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{a.acquiredDate}</TableCell>
+                  <TableCell className="text-sm text-right">{a.educationCost.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-right">{a.examFee.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-right font-semibold">{a.total.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{a.appliedDate}</TableCell>
+                  <TableCell>
+                    <Select value={a.status} onValueChange={v => updateStatus(a.id, v as Application['status'])}>
+                      <SelectTrigger className="w-24 h-8 text-xs border-border/60"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="대기중">대기중</SelectItem>
+                        <SelectItem value="승인">승인</SelectItem>
+                        <SelectItem value="반려">반려</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </Card>
       </main>
     </div>
