@@ -4,7 +4,8 @@ async function apiGet(action: string, params?: Record<string, string>) {
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
+  const res = await fetch(url.toString(), { redirect: 'follow' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   if (data.error) throw new Error(data.error);
   return data;
@@ -17,7 +18,9 @@ async function apiPost(action: string, body: unknown) {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(body),
+    redirect: 'follow',
   });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   if (data.error) throw new Error(data.error);
   return data;
