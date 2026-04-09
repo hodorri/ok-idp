@@ -9,17 +9,31 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { getCurrentUser, getApplications, saveApplications, getCertList, getFormConfig, type Application, type FormFieldConfig } from '@/lib/storage';
+import { getCurrentUser, type Application, type FormFieldConfig, type CertItem } from '@/lib/storage';
+import { fetchCertList, fetchFormConfig, createApplication, uploadImage } from '@/lib/api';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { CalendarIcon, Check, ChevronsUpDown, Upload, ArrowLeft, X, GraduationCap } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown, Upload, ArrowLeft, X, GraduationCap, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+function defaultFormConfig(): FormFieldConfig[] {
+  return [
+    { id: 'certName', label: '자격증명', type: 'dropdown', enabled: true, required: true, isCustom: false },
+    { id: 'acquiredDate', label: '취득일자', type: 'date', enabled: true, required: true, isCustom: false },
+    { id: 'educationCost', label: '교육비', type: 'number', enabled: true, required: true, isCustom: false },
+    { id: 'examFee', label: '응시료', type: 'number', enabled: true, required: true, isCustom: false },
+    { id: 'total', label: '합계', type: 'number', enabled: true, required: false, isCustom: false },
+    { id: 'note', label: '비고', type: 'textarea', enabled: true, required: false, isCustom: false },
+  ];
+}
 
 export default function UserApply() {
   const nav = useNavigate();
   const user = getCurrentUser();
-  const certList = getCertList();
-  const formConfig = getFormConfig();
+  const [certList, setCertList] = useState<CertItem[]>([]);
+  const [formConfig, setFormConfig] = useState<FormFieldConfig[]>(defaultFormConfig());
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [certName, setCertName] = useState('');
   const [certOpen, setCertOpen] = useState(false);
@@ -34,7 +48,16 @@ export default function UserApply() {
 
   const total = useMemo(() => (Number(educationCost) || 0) + (Number(examFee) || 0), [educationCost, examFee]);
 
-  useEffect(() => { if (!user) nav('/'); }, []);
+  useEffect(() => {
+    if (!user) { nav('/'); return; }
+    Promise.all([fetchCertList(), fetchFormConfig()])
+      .then(([certs, config]) => {
+        setCertList(certs);
+        if (config && config.length > 0) setFormConfig(config);
+      })
+      .catch(() => toast.error('데이터 로딩에 실패했습니다.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const enabledFields = formConfig.filter(f => f.enabled);
   const isFieldEnabled = (id: string) => enabledFields.some(f => f.id === id);
@@ -49,33 +72,58 @@ export default function UserApply() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isFieldEnabled('certName') && isRequired('certName') && !certName) { toast.error('자격증명을 선택해주세요.'); return; }
     if (isFieldEnabled('acquiredDate') && isRequired('acquiredDate') && !acquiredDate) { toast.error('취득일자를 선택해주세요.'); return; }
 
-    const app: Application = {
-      id: crypto.randomUUID(),
-      employeeId: user!.employeeId,
-      employeeName: user!.name,
-      certName,
-      acquiredDate: acquiredDate ? format(acquiredDate, 'yyyy-MM-dd') : '',
-      educationCost: Number(educationCost) || 0,
-      examFee: Number(examFee) || 0,
-      total,
-      note,
-      certImageUrl: certImage,
-      receiptImageUrl: receiptImage,
-      appliedDate: format(new Date(), 'yyyy-MM-dd'),
-      status: '대기중',
-      customFields,
-    };
+    setSubmitting(true);
+    try {
+      let certImageUrl = '';
+      let receiptImageUrl = '';
 
-    saveApplications([...getApplications(), app]);
-    toast.success('신청이 완료되었습니다!');
-    nav('/dashboard');
+      if (certImage) {
+        const res = await uploadImage(certImage, `cert_${Date.now()}.png`, '자격증이미지');
+        certImageUrl = res.fileUrl || '';
+      }
+      if (receiptImage) {
+        const res = await uploadImage(receiptImage, `receipt_${Date.now()}.png`, '영수증이미지');
+        receiptImageUrl = res.fileUrl || '';
+      }
+
+      await createApplication({
+        id: crypto.randomUUID(),
+        employeeId: user!.employeeId,
+        employeeName: user!.name,
+        certName,
+        acquiredDate: acquiredDate ? format(acquiredDate, 'yyyy-MM-dd') : '',
+        educationCost: Number(educationCost) || 0,
+        examFee: Number(examFee) || 0,
+        total,
+        note,
+        certImageUrl,
+        receiptImageUrl,
+        appliedDate: format(new Date(), 'yyyy-MM-dd'),
+        status: '대기중',
+      });
+
+      toast.success('신청이 완료되었습니다!');
+      nav('/dashboard');
+    } catch (err) {
+      toast.error('신청 중 오류가 발생했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const customFieldConfigs = enabledFields.filter(f => f.isCustom);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,7 +276,9 @@ export default function UserApply() {
               </div>
             </div>
 
-            <Button className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-medium shadow-sm" onClick={handleSubmit}>신청하기</Button>
+            <Button className="w-full h-11 bg-accent text-accent-foreground hover:bg-accent/90 font-medium shadow-sm" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null} 신청하기
+            </Button>
           </CardContent>
         </Card>
       </main>
